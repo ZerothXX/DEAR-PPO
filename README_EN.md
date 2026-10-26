@@ -2,13 +2,13 @@
 
 ### PPO-Guided Detail Enhancement for Anime Image Inpainting
 
-[��������](README.md) | **English**
+[简体中文](README.md) | **English**
 
 DEAR-PPO adds **PPO (Proximal Policy Optimization)** after a pretrained **LaMa** inpainting model to select a detail enhancement strength from image features. It explores the balance between line clarity, texture, and overall visual consistency in anime images.
 
-The pipeline is **LaMa inpainting �� fixed multiscale detail extraction �� PPO-guided strength selection**. Only the lightweight Actor-Critic network is trained; the LaMa backbone remains frozen.
+The pipeline is **LaMa inpainting → fixed multiscale detail extraction → PPO-guided strength selection**. Only the lightweight Actor-Critic network is trained; the LaMa backbone remains frozen.
 
-[Visual Results](#visual-results) �� [Method](#method) �� [Quick Start](#quick-start) �� [Experiment Records](#experiment-records) �� [Limitations and Next Steps](#limitations-and-next-steps)
+[Visual Results](#visual-results) · [Method](#method) · [Quick Start](#quick-start) · [Experiment Records](#experiment-records) · [Limitations and Next Steps](#limitations-and-next-steps)
 
 ## Visual Results
 
@@ -71,17 +71,17 @@ Here, $\hat{I}$ is the initial LaMa output, $R$ is a fixed multiscale detail res
 
 ### Masks and PPO Training
 
-- **Image preprocessing:** resize the longer side to 256 pixels while preserving the aspect ratio, then pad the right and bottom with black to obtain 256 �� 256 images.
-- **Complexity-aware masks:** estimate image complexity using Sobel gradients, with a target mask ratio of `0.11 - 0.10 �� complexity`. Lower complexity uses strip masks; higher complexity uses rectangles, circles, or ellipses. Actual coverage also depends on size and boundary constraints.
+- **Image preprocessing:** resize the longer side to 256 pixels while preserving the aspect ratio, then pad the right and bottom with black to obtain 256 × 256 images.
+- **Complexity-aware masks:** estimate image complexity using Sobel gradients, with a target mask ratio of `0.11 - 0.10 × complexity`. Lower complexity uses strip masks; higher complexity uses rectangles, circles, or ellipses. Actual coverage also depends on size and boundary constraints.
 - **Single-step decisions:** each image receives one enhancement action and is stored with `done=True` in the rollout buffer. The policy is updated using the PPO clipped objective, value loss, and entropy regularization.
 - **Evaluation policy:** use the Actor's mean output as the enhancement strength. Evaluation masks are still generated randomly.
 
 ### Reward Function
 
 ```text
-reward = 1.0 �� SSIM + 0.5 �� (PSNR / 40)
-       - 1.2 �� VGG perceptual distance - 0.5 �� edge loss - 0.5 �� frequency loss
-       + 0.8 �� (sharpness / 10)
+reward = 1.0 × SSIM + 0.5 × (PSNR / 40)
+       - 1.2 × VGG perceptual distance - 0.5 × edge loss - 0.5 × frequency loss
+       + 0.8 × (sharpness / 10)
 ```
 
 See [`rl.py`](rl.py) for the implementation. The log field `lpips` is actually an **L1 distance between multilevel VGG16 features**, not standard LPIPS. The `psnr` and `sharp` log fields are already divided by 40 and 10, respectively. Rewards and quality metrics are computed over the entire processed image.
@@ -114,17 +114,17 @@ The project uses the `0999`, `0777`, and `0117` subsets of [Danbooru2024-SFW](ht
 
 ```text
 DEAR-PPO/
-������ anime-manga-big-lama.pt       # Download separately
-������ dataset/
-��   ������ img1/                    # Supply JPG images separately
-��   ������ img2/
-��   ������ img3/
-��   ������ train.txt
-��   ������ val.txt
-��   ������ test.txt
-������ outputs/
-    ������ models/
-        ������ checkpoint_best.pt
+├── anime-manga-big-lama.pt       # Download separately
+├── dataset/
+│   ├── img1/                    # Supply JPG images separately
+│   ├── img2/
+│   ├── img3/
+│   ├── train.txt
+│   ├── val.txt
+│   └── test.txt
+└── outputs/
+    └── models/
+        └── checkpoint_best.pt
 ```
 
 Each split file contains one image path per line, relative to `dataset/`, such as `img3/5726.jpg`. Set `--data_root` to the **project directory containing `dataset/`**, rather than `dataset/` itself.
@@ -162,8 +162,8 @@ The values below are retained from the original project README. **They were not 
 
 | Metric | Recorded value | Interpretation |
 | --- | --- | --- |
-| SSIM �� | 0.9675 | Full-image structural similarity |
-| VGG perceptual distance �� | 0.0822 | Previously labeled LPIPS; the current implementation is not standard LPIPS |
+| SSIM ↑ | 0.9675 | Full-image structural similarity |
+| VGG perceptual distance ↓ | 0.0822 | Previously labeled LPIPS; the current implementation is not standard LPIPS |
 | Mean enhancement strength $w$ | 0.0007 | The policy favors weak detail enhancement |
 
 ### Reward and Enhancement Strength
@@ -178,9 +178,9 @@ These values follow the current command-line defaults in [`train.py`](train.py).
 
 | Parameter | Default |
 | --- | --- |
-| Image size / batch size | 256 �� 256 / 16 |
+| Image size / batch size | 256 × 256 / 16 |
 | PPO learning rate | `2e-5` |
-| Discount �� / GAE �� | 0.9 / 0.95 |
+| Discount γ / GAE λ | 0.9 / 0.95 |
 | PPO clip threshold / update epochs | 0.15 / 5 |
 | PPO mini-batch / buffer capacity | 64 / 4096 |
 | State dimension | 256 |
