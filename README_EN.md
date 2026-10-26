@@ -30,7 +30,6 @@ flowchart LR
 ```
 
 The final output is:
-
 $$
 I_{\mathrm{final}}=\operatorname{clip}\left(\hat{I}+w\,R(\hat{I}),\,0,\,1\right),\qquad w\in[0,1]
 $$
