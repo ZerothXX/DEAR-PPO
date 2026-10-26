@@ -8,31 +8,7 @@ DEAR-PPO 在预训练的 **LaMa** 图像修复模型之后引入 **PPO（Proxima
 
 项目采用“**LaMa 初步修复 → 固定多尺度细节提取 → PPO 自适应强度控制**”的流程，仅训练轻量的 Actor-Critic 网络，LaMa 主干保持冻结。
 
-[修复效果](#修复效果) · [方法](#方法) · [快速开始](#快速开始) · [实验记录](#实验记录) · [局限与后续方向](#局限与后续方向)
-
-## 修复效果
-
-以下图片直接来自仓库的 [`outputs/repaired/`](outputs/repaired) 文件夹。**每张图从左到右依次为：原图（参考）｜遮挡输入｜修复结果。** 中间图的黑色区域表示待修复内容，右侧为 LaMa + PPO 细节增强流程的输出。
-
-### 样例 1：局部遮挡修复
-
-![样例 1：左为原图，中为局部遮挡输入，右为修复结果](outputs/repaired/1.png)
-
-头发上方的遮挡区域得到补全，整体色彩与轮廓较为自然，可用于观察局部缺损与周围内容的衔接。
-
-### 样例 2：复杂服饰与纹理
-
-![样例 2：左为原图，中为横向条带遮挡输入，右为修复结果](outputs/repaired/2.png)
-
-横向遮挡穿过服饰与身体区域。修复后仍可见局部结构失真和较强的锐化痕迹，展示了复杂纹理场景中的困难。
-
-### 样例 3：头发与面部附近的遮挡
-
-![样例 3：左为原图，中为头部条带遮挡输入，右为修复结果](outputs/repaired/3.png)
-
-遮挡区域获得补全，但部分发丝与轮廓线条偏硬，可用于观察细节增强对画风一致性的影响。
-
-> 这些图片用于展示完整流程的定性表现，未单独列出原始 LaMa 输出，因此不构成“原始 LaMa 与 PPO 增强”的消融对比。样例也未附带各自的 checkpoint、随机种子或指标记录。
+[方法](#方法) · [快速开始](#快速开始) · [实验记录](#实验记录) · [局限与后续方向](#局限与后续方向) · [修复效果](#修复效果)
 
 ## 方法
 
@@ -166,12 +142,6 @@ python eval.py --data_root . --lama_path ./anime-manga-big-lama.pt --checkpoint 
 | VGG 感知距离 ↓ | 0.0822 | 原文记为 LPIPS，当前实现并非标准 LPIPS |
 | 平均增强强度 $w$ | 0.0007 | 策略倾向较弱的细节增强 |
 
-### 奖励与增强强度变化
-
-![已有训练奖励曲线与平均增强强度变化](reward_convergence.png)
-
-已有训练曲线中，平滑奖励逐渐上升，而平均增强强度下降至接近零。结合上面的记录，策略在该奖励设置下倾向保留 LaMa 的基础输出；是否优于原始 LaMa，仍需在相同数据和固定掩码下进行消融评估。
-
 ### 默认训练参数
 
 以下以当前 [`train.py`](train.py) 的命令行默认值为准。
@@ -203,6 +173,38 @@ python eval.py --data_root . --lama_path ./anime-manga-big-lama.pt --checkpoint 
 - **复杂区域与画风一致性**：服饰、面部、发丝等区域仍可能产生结构失真，过强的细节增强也可能使线条偏硬。
 - **增益尚待量化**：当前展示缺少原始 LaMa 与不同固定增强强度的对照，整图指标也可能弱化小面积遮挡中的误差。后续应补充固定掩码、修复区域指标和标准 LPIPS 评估。
 - **状态编码器复现限制**：当前编码器随机初始化后冻结，checkpoint 仅保存 Actor-Critic 和优化器，`eval.py` 会重新初始化编码器。严格复现需保存并恢复同一编码器，同时固定 Python、NumPy、PyTorch 随机种子及评估掩码。
+
+## 训练曲线
+
+![已有训练奖励曲线与平均增强强度变化](reward_convergence.png)
+
+已有训练曲线中，平滑奖励逐渐上升，而平均增强强度下降至接近零。结合上面的记录，策略在该奖励设置下倾向保留 LaMa 的基础输出；是否优于原始 LaMa，仍需在相同数据和固定掩码下进行消融评估。
+
+## 修复效果
+
+以下图片直接来自仓库的 [`outputs/repaired/`](outputs/repaired) 文件夹。**每张图从左到右依次为：原图（参考）｜遮挡输入｜修复结果。** 中间图的黑色区域表示待修复内容，右侧为 LaMa + PPO 细节增强流程的输出。
+
+<table>
+  <tr>
+    <th align="center">样例 1：局部遮挡</th>
+    <th align="center">样例 2：复杂纹理</th>
+    <th align="center">样例 3：头发与面部</th>
+  </tr>
+  <tr>
+    <td width="33%" align="center"><a href="outputs/repaired/1.png"><img src="outputs/repaired/1.png" width="240" alt="样例 1：局部遮挡"></a></td>
+    <td width="33%" align="center"><a href="outputs/repaired/2.png"><img src="outputs/repaired/2.png" width="240" alt="样例 2：复杂纹理"></a></td>
+    <td width="33%" align="center"><a href="outputs/repaired/3.png"><img src="outputs/repaired/3.png" width="240" alt="样例 3：头发与面部"></a></td>
+  </tr>
+  <tr>
+    <td align="center">补全局部缺损，观察色彩与轮廓衔接。</td>
+    <td align="center">服饰细节仍有结构失真与锐化痕迹。</td>
+    <td align="center">部分发丝与轮廓偏硬，可观察画风一致性。</td>
+  </tr>
+</table>
+
+点击图片可查看原尺寸对照图。
+
+> 这些图片用于展示完整流程的定性表现，未单独列出原始 LaMa 输出，因此不构成“原始 LaMa 与 PPO 增强”的消融对比。样例也未附带各自的 checkpoint、随机种子或指标记录。
 
 ## 致谢
 

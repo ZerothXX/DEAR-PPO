@@ -8,31 +8,7 @@ DEAR-PPO adds **PPO (Proximal Policy Optimization)** after a pretrained **LaMa**
 
 The pipeline is **LaMa inpainting → fixed multiscale detail extraction → PPO-guided strength selection**. Only the lightweight Actor-Critic network is trained; the LaMa backbone remains frozen.
 
-[Visual Results](#visual-results) · [Method](#method) · [Quick Start](#quick-start) · [Experiment Records](#experiment-records) · [Limitations and Next Steps](#limitations-and-next-steps)
-
-## Visual Results
-
-The images below come directly from [`outputs/repaired/`](outputs/repaired). **Each image reads from left to right: original reference | masked input | restored output.** Black regions in the middle panel indicate missing content. The right panel shows the output of the LaMa + PPO detail enhancement pipeline.
-
-### Example 1: Local Occlusion
-
-![Example 1: original reference on the left, locally masked input in the middle, restored output on the right](outputs/repaired/1.png)
-
-The missing region near the top of the hair is filled with relatively consistent colors and contours, illustrating how a local repair connects to its surroundings.
-
-### Example 2: Complex Clothing and Texture
-
-![Example 2: original reference on the left, horizontal strip occlusion in the middle, restored output on the right](outputs/repaired/2.png)
-
-A horizontal strip crosses clothing and the body. Local structural distortion and strong sharpening remain visible in the output, illustrating the difficulty of restoring complex textures.
-
-### Example 3: Occlusion Around Hair and Faces
-
-![Example 3: original reference on the left, head-level strip occlusion in the middle, restored output on the right](outputs/repaired/3.png)
-
-The missing region is filled, but some hair strands and contours appear harsh. This example illustrates how detail enhancement can affect stylistic consistency.
-
-> These images illustrate the complete pipeline. They do not include a separate LaMa-only output and therefore are not a LaMa-versus-PPO ablation. Per-example checkpoints, random seeds, and metric logs are not attached.
+[Method](#method) · [Quick Start](#quick-start) · [Experiment Records](#experiment-records) · [Limitations and Next Steps](#limitations-and-next-steps) · [Visual Results](#visual-results)
 
 ## Method
 
@@ -166,12 +142,6 @@ The values below are retained from the original project README. **They were not 
 | VGG perceptual distance ↓ | 0.0822 | Previously labeled LPIPS; the current implementation is not standard LPIPS |
 | Mean enhancement strength $w$ | 0.0007 | The policy favors weak detail enhancement |
 
-### Reward and Enhancement Strength
-
-![Existing training reward curve and mean enhancement strength](reward_convergence.png)
-
-In the existing training curve, smoothed reward rises while mean enhancement strength falls toward zero. Together with the record above, this suggests that the policy favors retaining the base LaMa output under this reward configuration. An ablation with identical data and fixed masks is still needed to determine whether it improves over LaMa alone.
-
 ### Default Training Parameters
 
 These values follow the current command-line defaults in [`train.py`](train.py).
@@ -203,6 +173,38 @@ These values follow the current command-line defaults in [`train.py`](train.py).
 - **Complex regions and style consistency:** clothing, faces, and hair can still exhibit structural distortion. Strong enhancement can also make lines look harsh.
 - **Improvement remains to be quantified:** the current gallery lacks LaMa-only and fixed-strength baselines. Full-image metrics may also understate errors in small masked regions. Future evaluation should use fixed masks, masked-region metrics, and standard LPIPS.
 - **State encoder reproducibility:** the encoder is randomly initialized and frozen, while checkpoints save only the Actor-Critic and optimizer. `eval.py` initializes a new encoder. Strict reproduction requires saving and restoring the same encoder and fixing Python, NumPy, and PyTorch seeds as well as evaluation masks.
+
+## Training Curve
+
+![Existing training reward curve and mean enhancement strength](reward_convergence.png)
+
+In the existing training curve, smoothed reward rises while mean enhancement strength falls toward zero. Together with the record above, this suggests that the policy favors retaining the base LaMa output under this reward configuration. An ablation with identical data and fixed masks is still needed to determine whether it improves over LaMa alone.
+
+## Visual Results
+
+The images below come directly from [`outputs/repaired/`](outputs/repaired). **Each image reads from left to right: original reference | masked input | restored output.** Black regions in the middle panel indicate missing content. The right panel shows the output of the LaMa + PPO detail enhancement pipeline.
+
+<table>
+  <tr>
+    <th align="center">Example 1: Local Occlusion</th>
+    <th align="center">Example 2: Complex Texture</th>
+    <th align="center">Example 3: Hair and Faces</th>
+  </tr>
+  <tr>
+    <td width="33%" align="center"><a href="outputs/repaired/1.png"><img src="outputs/repaired/1.png" width="240" alt="Example 1: Local Occlusion"></a></td>
+    <td width="33%" align="center"><a href="outputs/repaired/2.png"><img src="outputs/repaired/2.png" width="240" alt="Example 2: Complex Texture"></a></td>
+    <td width="33%" align="center"><a href="outputs/repaired/3.png"><img src="outputs/repaired/3.png" width="240" alt="Example 3: Hair and Faces"></a></td>
+  </tr>
+  <tr>
+    <td align="center">Local filling with relatively consistent colors and contours.</td>
+    <td align="center">Structural distortion and sharpening remain in clothing details.</td>
+    <td align="center">Some hair strands and contours appear harsh.</td>
+  </tr>
+</table>
+
+Click any image to view the full-size comparison.
+
+> These images illustrate the complete pipeline. They do not include a separate LaMa-only output and therefore are not a LaMa-versus-PPO ablation. Per-example checkpoints, random seeds, and metric logs are not attached.
 
 ## Acknowledgments
 
